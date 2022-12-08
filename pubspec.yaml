@@ -1,5 +1,5 @@
 name: safe_area_insets
-description: A new Flutter package project.
+description: Use Dart to get the `safe-area-insets` on Web platform.
 version: 0.0.1
 homepage:
 
@@ -10,6 +10,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  js: ^0.6.5
 
 dev_dependencies:
   flutter_test:

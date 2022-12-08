@@ -1,7 +1,6 @@
 library safe_area_insets;
 
-/// A Calculator.
-class Calculator {
-  /// Returns [value] plus 1.
-  int addOne(int value) => value + 1;
-}
+export 'src/core_stub.dart' //
+    if (dart.library.html) 'src/core.dart';
+
+export 'src/web_safe_area_insets.dart';

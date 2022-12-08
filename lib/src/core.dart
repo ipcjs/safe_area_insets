@@ -1,50 +1,76 @@
-'use strict'
-var attrs: string[] = ['top', 'left', 'right', 'bottom']
-var inited: boolean
-var elementComputedStyle = {}
-var support: string
+// ignore_for_file: avoid_web_libraries_in_flutter, avoid_function_literals_in_foreach_calls
 
-function getSupport() {
-    if(!('CSS' in window) || typeof CSS.supports != 'function') {
-        support = ''
-    } else if(CSS.supports('top: env(safe-area-inset-top)')) {
-        support = 'env'
-    } else if(CSS.supports('top: constant(safe-area-inset-top)')) {
-        support = 'constant'
-    } else {
-        support = ''
-    }
-    return support
+import 'dart:async';
+import 'dart:core';
+import 'dart:html';
+import 'package:flutter/rendering.dart' show EdgeInsets;
+
+import 'js_ext.dart';
+import 'web_safe_area_insets.dart';
+
+enum _InsetsAttr { top, left, right, bottom }
+
+EdgeInsets _readInsets() {
+  final styles = elementComputedStyle;
+  return EdgeInsets.only(
+    left: styles[_InsetsAttr.left]?.insetValue ?? 0.0,
+    top: styles[_InsetsAttr.top]?.insetValue ?? 0.0,
+    right: styles[_InsetsAttr.right]?.insetValue ?? 0.0,
+    bottom: styles[_InsetsAttr.bottom]?.insetValue ?? 0.0,
+  );
 }
 
-function init() {
-    support = typeof support === 'string' ? support : getSupport()
-    if(!support) {
-        attrs.forEach((attr: string) => {
-            elementComputedStyle[attr] = 0
-        })
-        return
+extension _Ext on CssStyleDeclaration {
+  double? get insetValue {
+    final value = paddingBottom;
+    if (!value.endsWith('px')) {
+      return null;
     }
+    return double.tryParse(value.substring(0, value.length - 2));
+  }
+}
 
-    function setStyle(el: HTMLElement, style) {
-        var elStyle: CSSStyleDeclaration = el.style
-        Object.keys(style).forEach(key => {
-            var val: string = style[key]
-            elStyle[key] = val
-        })
+/// use Dart rewrite [safeAreaInsets](https://github.com/zhetengbiji/safeAreaInsets/blob/master/src/index.ts)
+var inited = false;
+var elementComputedStyle = <_InsetsAttr, CssStyleDeclaration>{};
+String? support;
+
+String getSupport() {
+  String support;
+  if (Css.supportsCondition('top: env(safe-area-inset-top)')) {
+    support = 'env';
+  } else if (Css.supportsCondition('top: constant(safe-area-inset-top)')) {
+    support = 'constant';
+  } else {
+    support = '';
+  }
+  return support;
+}
+
+void init() {
+  if (!isSupported) {
+    return;
+  }
+
+  void setStyle(HtmlElement el, Map<String, String> style) {
+    style.forEach((key, value) {
+      el.style.setProperty(key, value);
+    });
+  }
+
+  final cbs = <VoidCallback>[];
+  void parentReady([VoidCallback? callback]) {
+    if (callback != null) {
+      cbs.add(callback);
+    } else {
+      cbs.forEach((cb) {
+        cb();
+      });
     }
+  }
 
-    var cbs: Function[] = []
-    function parentReady(callback?: Function) {
-        if(callback) {
-            cbs.push(callback)
-        } else {
-            cbs.forEach(cb => {
-                cb()
-            })
-        }
-    }
-
+  /*
+    // Check if passive is supported
     var passiveEvents: any = false
     try {
         var opts = Object.defineProperty({}, 'passive', {
@@ -56,148 +82,159 @@ function init() {
     } catch(e) {
 
     }
+    */
 
-    function addChild(parent: HTMLElement, attr: string) {
-        var a1: HTMLElement = document.createElement('div')
-        var a2: HTMLElement = document.createElement('div')
-        var a1Children: HTMLElement = document.createElement('div')
-        var a2Children: HTMLElement = document.createElement('div')
-        var W: number = 100
-        var MAX: number = 10000
-        var aStyle = {
-            position: 'absolute',
-            width: W + 'px',
-            height: '200px',
-            boxSizing: 'border-box',
-            overflow: 'hidden',
-            paddingBottom: `${support}(safe-area-inset-${attr})`
-        }
-        setStyle(a1, aStyle)
-        setStyle(a2, aStyle)
-        setStyle(a1Children, {
-            transition: '0s',
-            animation: 'none',
-            width: '400px',
-            height: '400px'
-        })
-        setStyle(a2Children, {
-            transition: '0s',
-            animation: 'none',
-            width: '250%',
-            height: '250%'
-        })
-        a1.appendChild(a1Children)
-        a2.appendChild(a2Children)
-        parent.appendChild(a1)
-        parent.appendChild(a2)
+  void addChild(HtmlElement parent, _InsetsAttr attr) {
+    final a1 = DivElement();
+    final a2 = DivElement();
+    final a1Children = DivElement();
+    final a2Children = DivElement();
+    const W = 100;
+    const MAX = 10000;
+    final aStyle = <String, String>{
+      'position': 'absolute',
+      'width': '${W}px',
+      'height': '200px',
+      'box-sizing': 'border-box',
+      'overflow': 'hidden',
+      'padding-bottom': '$support(safe-area-inset-${attr.name})'
+    };
+    setStyle(a1, aStyle);
+    setStyle(a2, aStyle);
+    setStyle(a1Children, {
+      'transition': '0s',
+      'animation': 'none',
+      'width': '400px',
+      'height': '400px',
+    });
+    setStyle(a2Children, {
+      'transition': '0s',
+      'animation': 'none',
+      'width': '250%',
+      'height': '250%',
+    });
+    a1.children.add(a1Children);
+    a2.children.add(a2Children);
+    parent.children.add(a1);
+    parent.children.add(a2);
 
-        parentReady(() => {
-            a1.scrollTop = a2.scrollTop = MAX
-            var a1LastScrollTop: number = a1.scrollTop
-            var a2LastScrollTop: number = a2.scrollTop
-            function onScroll() {
-                if(this.scrollTop === (this === a1 ? a1LastScrollTop : a2LastScrollTop)) {
-                    return
-                }
-                a1.scrollTop = a2.scrollTop = MAX
-                a1LastScrollTop = a1.scrollTop
-                a2LastScrollTop = a2.scrollTop
-                attrChange(attr)
-            }
-            a1.addEventListener('scroll', onScroll, passiveEvents)
-            a2.addEventListener('scroll', onScroll, passiveEvents)
-        })
+    parentReady(() {
+      a1.scrollTop = a2.scrollTop = MAX;
+      var a1LastScrollTop = a1.scrollTop;
+      var a2LastScrollTop = a2.scrollTop;
+      EventListener onScroll(HtmlElement that) {
+        return (ev) {
+          if (that.scrollTop ==
+              (that == a1 ? a1LastScrollTop : a2LastScrollTop)) {
+            return;
+          }
+          a1.scrollTop = a2.scrollTop = MAX;
+          a1LastScrollTop = a1.scrollTop;
+          a2LastScrollTop = a2.scrollTop;
+          _attrChange(attr);
+        };
+      }
 
-        var computedStyle: CSSStyleDeclaration = getComputedStyle(a1)
-        Object.defineProperty(elementComputedStyle, attr, {
-            configurable: true,
-            get() {
-                return parseFloat(computedStyle.paddingBottom)
-            }
-        })
-    }
+      a1.listenEvent(
+        'scroll',
+        onScroll(a1),
+        AddEventListenerOptions(passive: true),
+      );
+      a2.listenEvent(
+        'scroll',
+        onScroll(a2),
+        AddEventListenerOptions(passive: true),
+      );
+    });
 
-    var parentDiv: HTMLElement = document.createElement('div')
-    setStyle(parentDiv, {
-        position: 'absolute',
-        left: '0',
-        top: '0',
-        width: '0',
-        height: '0',
-        zIndex: '-1',
-        overflow: 'hidden',
-        visibility: 'hidden',
-    })
-    attrs.forEach(key => {
-        addChild(parentDiv, key)
-    })
-    document.body.appendChild(parentDiv)
-    parentReady()
-    inited = true
+    final computedStyle = a1.getComputedStyle();
+    elementComputedStyle[attr] = computedStyle;
+  }
+
+  final parentDiv = DivElement();
+  setStyle(parentDiv, {
+    'position': 'absolute',
+    'left': '0',
+    'top': '0',
+    'width': '0',
+    'height': '0',
+    'zIndex': '-1',
+    'overflow': 'hidden',
+    'visibility': 'hidden',
+  });
+  _InsetsAttr.values.forEach((key) {
+    addChild(parentDiv, key);
+  });
+  document.body?.children.add(parentDiv);
+  parentReady();
+  inited = true;
 }
 
-function getAttr(attr: string): number {
-    if(!inited) {
-        init()
-    }
-    return elementComputedStyle[attr]
+/// Read the current 'safe-area-insets'
+EdgeInsets get safeAreaInsets {
+  if (!inited) {
+    init();
+  }
+  return _readInsets();
 }
 
-var changeAttrs: string[] = []
-function attrChange(attr: string) {
-    if(!changeAttrs.length) {
-        setTimeout(() => {
-            var style = {}
-            changeAttrs.forEach(attr => {
-                style[attr] = elementComputedStyle[attr]
-            })
-            changeAttrs.length = 0
-            callbacks.forEach(callback => {
-                callback(style)
-            })
-        }, 0)
-    }
-    changeAttrs.push(attr)
+var changeAttrs = <_InsetsAttr>[];
+void _attrChange(_InsetsAttr attr) {
+  if (changeAttrs.isEmpty) {
+    Timer(Duration.zero, () {
+      if (changeAttrs.isEmpty) {
+        return;
+      }
+      final style = _readInsets();
+      changeAttrs.clear();
+      callbacks.forEach((callback) {
+        callback(style);
+      });
+    });
+  }
+  changeAttrs.add(attr);
 }
 
-var callbacks: Function[] = []
-function onChange(callback: Function) {
-    if(!getSupport()) {
-        return
-    }
-    if(!inited) {
-        init()
-    }
-    if(typeof callback === 'function') {
-        callbacks.push(callback)
-    }
+var callbacks = <SafeAreaInsetsChangedCallback>[];
+
+/// Register a closure to be called when the [safeAreaInsets] be changed.
+void onChange(SafeAreaInsetsChangedCallback callback) {
+  if (!isSupported) {
+    return;
+  }
+  if (!inited) {
+    init();
+  }
+  callbacks.add(callback);
 }
 
-function offChange(callback: Function) {
-    var index = callbacks.indexOf(callback)
-    if(index >= 0){
-        callbacks.splice(index, 1)
+/// Remove a previously registered closure
+void offChange(SafeAreaInsetsChangedCallback callback) {
+  callbacks.remove(callback);
+}
+
+bool get isSupported => (support ??= getSupport()).isNotEmpty;
+
+/// Set `viewport-fit=cover`
+///
+/// @see https://github.com/flutter/flutter/issues/84833#issuecomment-890540239
+void setupViewportFit() {
+  var viewport = querySelector('meta[name=viewport]') as MetaElement?;
+  if (viewport == null) {
+    viewport = MetaElement();
+    document.head?.children.add(viewport);
+  }
+  final attrs = <String, String>{};
+  for (final keyValue
+      in viewport.content.split(',').map((e) => e.trim().split('='))) {
+    if (keyValue.length == 2) {
+      attrs[keyValue[0]] = keyValue[1];
     }
-}
+  }
 
-var safeAreaInsets = {
-    get support(): boolean {
-        return (typeof support === 'string' ? support : getSupport()).length != 0
-    },
-    get top(): number {
-        return getAttr('top')
-    },
-    get left(): number {
-        return getAttr('left')
-    },
-    get right(): number {
-        return getAttr('right')
-    },
-    get bottom(): number {
-        return getAttr('bottom')
-    },
-    onChange,
-    offChange
+  if (attrs['viewport-fit'] != 'cover') {
+    attrs['viewport-fit'] = 'cover';
+    viewport.content =
+        attrs.entries.map((e) => '${e.key}=${e.value}').join(',');
+  }
 }
-
-export = safeAreaInsets

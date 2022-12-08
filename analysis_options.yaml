@@ -2,3 +2,12 @@ include: package:flutter_lints/flutter.yaml
 
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options
+
+linter:
+  rules:
+    prefer_single_quotes: true
+    unnecessary_brace_in_string_interps: false
+    unawaited_futures: true
+    avoid_void_async: true
+    prefer_final_locals: true
+    prefer_final_in_for_each: true

@@ -42,3 +42,11 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# running 'flutter create .' to create other platform's code.
+/android
+/ios
+/windows
+/linux
+/macos
+/.metadata
