@@ -1,6 +1,6 @@
 name: safe_area_insets
 description: Use Dart to get the `safe-area-insets` on Web platform.
-version: 0.0.1
+version: 0.0.2
 homepage: https://github.com/ipcjs/safe_area_insets
 repository: https://github.com/ipcjs/safe_area_insets.git
 
@@ -11,7 +11,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  js: ^0.6.5
+  # flutter already depends on the `package:js`, no need to specify the version number again.
+  js: any
 
 dev_dependencies:
   flutter_test:
