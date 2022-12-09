@@ -7,8 +7,6 @@ Never _unsupported() =>
 
 EdgeInsets get safeAreaInsets => _unsupported();
 
-void onChange(SafeAreaInsetsChangedCallback callback) => _unsupported();
-
-void offChange(SafeAreaInsetsChangedCallback callback) => _unsupported();
+Stream<EdgeInsets> get safeAreaInsetsStream => _unsupported();
 
 void setupViewportFit() => _unsupported();

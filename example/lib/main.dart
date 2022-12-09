@@ -1,13 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:safe_area_insets/safe_area_insets.dart' as sai;
+import 'package:safe_area_insets/safe_area_insets.dart';
 
 import 'js_ext_stub.dart'
     if (dart.library.html) 'package:safe_area_insets/src/js_ext.dart';
 
 void main() {
   testJsExt();
-  if (kIsWeb) sai.setupViewportFit();
+  if (kIsWeb) setupViewportFit();
 
   runApp(const MyApp());
 }
@@ -34,23 +34,22 @@ class _MyAppState extends State<MyApp> {
             alignment: Alignment.center,
             color: Colors.green,
             child: Material(
-              child: InkWell(
-                onTap: () => setState(() {
-                  /*refresh*/
-                }),
-                child: Text(
-                  'SafeAreaInsets: ${kIsWeb ? sai.safeAreaInsets : 'unsupported'}\n'
-                  'Click to Refresh',
-                  textAlign: TextAlign.center,
-                ),
-              ),
+              child: kIsWeb
+                  ? StreamBuilder(
+                      stream: safeAreaInsetsStream,
+                      builder: (context, snapshot) => Text(
+                        'SafeAreaInsets: ${snapshot.data ?? safeAreaInsets}',
+                        textAlign: TextAlign.center,
+                      ),
+                    )
+                  : const Text('unsupported'),
             ),
           ),
         ),
       ),
       builder: (context, child) {
         child ??= const SizedBox();
-        return kIsWeb ? sai.WebSafeAreaInsets(child: child) : child;
+        return kIsWeb ? WebSafeAreaInsets(child: child) : child;
       },
     );
   }

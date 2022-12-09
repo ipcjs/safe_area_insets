@@ -178,6 +178,18 @@ EdgeInsets get safeAreaInsets {
   return _readInsets();
 }
 
+final _insetsStreamController = StreamController<EdgeInsets>.broadcast(
+  onListen: () {
+    if (!inited) {
+      init();
+    }
+  },
+  sync: true,
+);
+
+/// Listen to the changes of `safe-area-insets`
+Stream<EdgeInsets> get safeAreaInsetsStream => _insetsStreamController.stream;
+
 var changeAttrs = <_InsetsAttr>[];
 void _attrChange(_InsetsAttr attr) {
   if (changeAttrs.isEmpty) {
@@ -185,32 +197,11 @@ void _attrChange(_InsetsAttr attr) {
       if (changeAttrs.isEmpty) {
         return;
       }
-      final style = _readInsets();
       changeAttrs.clear();
-      callbacks.forEach((callback) {
-        callback(style);
-      });
+      _insetsStreamController.add(_readInsets());
     });
   }
   changeAttrs.add(attr);
-}
-
-var callbacks = <SafeAreaInsetsChangedCallback>[];
-
-/// Register a closure to be called when the [safeAreaInsets] be changed.
-void onChange(SafeAreaInsetsChangedCallback callback) {
-  if (!isSupported) {
-    return;
-  }
-  if (!inited) {
-    init();
-  }
-  callbacks.add(callback);
-}
-
-/// Remove a previously registered closure
-void offChange(SafeAreaInsetsChangedCallback callback) {
-  callbacks.remove(callback);
 }
 
 bool get isSupported => (support ??= getSupport()).isNotEmpty;

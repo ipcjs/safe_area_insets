@@ -1,6 +1,6 @@
 name: safe_area_insets
 description: Use Dart to get the `safe-area-insets` on Web platform.
-version: 0.0.2
+version: 0.1.0
 homepage: https://github.com/ipcjs/safe_area_insets
 repository: https://github.com/ipcjs/safe_area_insets.git
 
