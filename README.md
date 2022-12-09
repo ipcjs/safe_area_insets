@@ -4,6 +4,12 @@ Use Dart to get the `safe-area-insets` on Web platform.
 
 ## Usage
 
+It is recommended to add this line in [index.html](example/web/index.html) to prevent flickering during loading.
+
+```html
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+```
+
 See [example](example/lib/main.dart) for more detail.
 
 ## Related Reading

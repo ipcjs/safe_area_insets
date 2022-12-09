@@ -35,7 +35,7 @@ class _MyAppState extends State<MyApp> {
             color: Colors.green,
             child: Material(
               child: kIsWeb
-                  ? StreamBuilder(
+                  ? StreamBuilder<EdgeInsets>(
                       stream: safeAreaInsetsStream,
                       builder: (context, snapshot) => Text(
                         'SafeAreaInsets: ${snapshot.data ?? safeAreaInsets}',

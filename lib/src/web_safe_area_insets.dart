@@ -22,7 +22,7 @@ class WebSafeAreaInsets extends StatelessWidget {
       return child;
     }
 
-    return StreamBuilder(
+    return StreamBuilder<EdgeInsets>(
       stream: safeAreaInsetsStream,
       builder: (context, snapshot) {
         final insets = snapshot.data ?? safeAreaInsets;
