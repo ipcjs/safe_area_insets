@@ -1,3 +1,7 @@
+## 0.1.2
+
+* Update README.md
+
 ## 0.1.1
 
 * set minimize sdk version to `2.17.0`
