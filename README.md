@@ -12,6 +12,8 @@ It is recommended to add this line in [index.html](example/web/index.html) to pr
 
 See [example](example/lib/main.dart) for more detail.
 
+![screenshot-example](docs/screenshot-example.png)
+
 ## Related Reading
 
 - [[web][PWA] SafeArea Widget does not work on iOS Safari PWA · Issue #84833 · flutter/flutter](https://github.com/flutter/flutter/issues/84833#issuecomment-890540239)
