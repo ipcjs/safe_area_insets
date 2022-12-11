@@ -12,7 +12,7 @@ It is recommended to add this line in [index.html](example/web/index.html) to pr
 
 See [example](example/lib/main.dart) for more detail.
 
-![screenshot-example](docs/screenshot-example.png)
+![screenshot-example](doc/screenshot-example.png)
 
 ## Related Reading
 
