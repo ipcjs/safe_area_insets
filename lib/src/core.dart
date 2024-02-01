@@ -3,10 +3,10 @@
 import 'dart:async';
 import 'dart:core';
 import 'dart:html';
+
 import 'package:flutter/rendering.dart' show EdgeInsets;
 
 import 'js_ext.dart';
-import 'web_safe_area_insets.dart';
 
 enum _InsetsAttr { top, left, right, bottom }
 
@@ -90,6 +90,7 @@ void init() {
     final a1Children = DivElement();
     final a2Children = DivElement();
     const W = 100;
+    // ignore: constant_identifier_names
     const MAX = 10000;
     final aStyle = <String, String>{
       'position': 'absolute',
